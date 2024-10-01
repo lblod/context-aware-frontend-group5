@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulatie Meerdere Gebruikers</title>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const users = {
+                "user1": {
+                    name: "Jan Jansen",
+                    organization: "Gemeente Opwijk",
+                    role: "burger"
+                },
+                "user2": {
+                    name: "Piet Pietersen",
+                    organization: "Gemeente Opwijk",
+                    role: "employee"
+                },
+                "user3": {
+                    name: "Klaas de Vries",
+                    organization: "Gemeente Merchtem",
+                    role: "employee"
+                }
+            };
+
+            // Update de formuliervelden op basis van de gekozen gebruiker
+            document.getElementById('user-select').addEventListener('change', function(event) {
+                const selectedUser = event.target.value;
+                if (users[selectedUser]) {
+                    document.getElementById('name').value = users[selectedUser].name;
+                    document.getElementById('organization').value = users[selectedUser].organization;
+                    document.getElementById('role').value = users[selectedUser].role;
+                }
+            });
+
+            // Functie om formuliergegevens te verwerken en naar de API te sturen
+            document.getElementById('service-request').addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                // Verzamelen van gebruikersinformatie
+                const name = document.getElementById('name').value;
+                const organization = document.getElementById('organization').value;
+                const role = document.getElementById('role').value;
+                const latitude = 52.3676;  // Dummy-waarde voor locatie (Amsterdam)
+                const longitude = 4.9041;  // Dummy-waarde voor locatie (Amsterdam)
+                const device = navigator.userAgent; // Apparaatinformatie
+                const language = navigator.language || 'nl'; // Taal van de gebruiker
+                const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone; // Tijdzone
+
+                // Verzamelen van de service-request informatie
+                const documentType = document.getElementById('documentType').value;
+
+                // Linked Data (RDF in JSON-LD formaat) + Service Request
+                const requestData =  {
+                    "@context": {
+                        "foaf": "http://xmlns.com/foaf/0.1/",
+                        "geo": "http://www.w3.org/2003/01/geo/wgs84_pos#",
+                        "xsd": "http://www.w3.org/2001/XMLSchema#"
+                    },
+                    "@type": "foaf:Person",
+                    "foaf:name": name,
+                    "foaf:member": {
+                        "@type": "foaf:Organization",
+                        "foaf:name": organization
+                    },
+                    "foaf:based_near": {
+                        "@type": "geo:Point",
+                        "geo:lat": latitude,
+                        "geo:long": longitude
+                    },
+                    "foaf:role": role,
+                    "foaf:device": device,
+                    "foaf:language": language,
+                    "foaf:timezone": timezone,
+                    "serviceRequest": {
+                        "@type": "foaf:Document",
+                        "foaf:title": documentType // Specifieke request die naar de API gaat
+                    }
+                };
+
+                // Versturen van de gecombineerde gebruikersinformatie en service request naar de API
+                fetch('http://localhost/ca-service/context-aware-service/someFunctionality', { // Pas de URL van de API hier aan
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/ld+json'
+                    },
+                    body: JSON.stringify(requestData)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Success:', data);
+                        document.getElementById('response-display').textContent = JSON.stringify(data, null, 2);
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                    });
+            });
+        });
+    </script>
+    <style>
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            max-width: 600px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+<h1>Simulatie Meerdere Gebruikers</h1>
+<p>Selecteer een gebruiker uit de lijst en vul een service request in om deze te simuleren.</p>
+
+<form id="service-request">
+    <h3>Selecteer Gebruiker</h3>
+    <label for="user-select">Gebruiker:</label>
+    <select id="user-select" name="user-select">
+        <option value="">-- Selecteer een gebruiker --</option>
+        <option value="user1">Jan Jansen (Burger, Gemeente Opwijk)</option>
+        <option value="user2">Piet Pietersen (Medewerker, Gemeente Opwijk)</option>
+        <option value="user3">Klaas de Vries (Medewerker, Gemeente Merchtem)</option>
+    </select><br><br>
+
+    <h3>Gebruikersinformatie</h3>
+    <label for="name">Naam:</label>
+    <input type="text" id="name" name="name" required><br><br>
+
+    <label for="organization">Organisatie:</label>
+    <input type="text" id="organization" name="organization" required><br><br>
+
+    <label for="role">Hoedanigheid:</label>
+    <select id="role" name="role" required>
+        <option value="burger">Burger</option>
+        <option value="employee">Medewerker</option>
+    </select><br><br>
+
+    <h3>Service Request</h3>
+    <label for="documentType">Document Type:</label>
+    <select id="documentType" name="documentType" required>
+        <option value="paspoort">Paspoort</option>
+        <option value="rijbewijs">Rijbewijs</option>
+        <option value="identiteitskaart">Identiteitskaart</option>
+    </select><br><br>
+
+    <button type="submit">Verstuur</button>
+</form>
+<h3>Response van de API</h3>
+<pre id="response-display">Nog geen response...</pre>
+</body>
+</html>
