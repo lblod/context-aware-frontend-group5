@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -10,17 +11,23 @@
                 "user1": {
                     name: "Jan Jansen",
                     organization: "Gemeente Opwijk",
-                    role: "burger"
+                    organizationURI: "http://www.abb.be/lpdc/context/organizations/GemeenteOpwijk",
+                    role: "burger",
+                    personURI: "http://www.abb.be/lpdc/context/persons/JanJansen"
                 },
                 "user2": {
                     name: "Piet Pietersen",
                     organization: "Gemeente Opwijk",
-                    role: "employee"
+                    organizationURI: "http://www.abb.be/lpdc/context/organizations/GemeenteOpwijk",
+                    role: "employee",
+                    personURI: "http://www.abb.be/lpdc/context/persons/PietPietersen"
                 },
                 "user3": {
                     name: "Klaas de Vries",
                     organization: "Gemeente Merchtem",
-                    role: "employee"
+                    organizationURI: "http://www.abb.be/lpdc/context/organizations/GemeenteMerchtem",
+                    role: "employee",
+                    personURI: "http://www.abb.be/lpdc/context/persons/KlaasDeVries"
                 }
             };
 
@@ -31,6 +38,8 @@
                     document.getElementById('name').value = users[selectedUser].name;
                     document.getElementById('organization').value = users[selectedUser].organization;
                     document.getElementById('role').value = users[selectedUser].role;
+                    document.getElementById('personURI').value = users[selectedUser].personURI;
+                    document.getElementById('organizationURI').value = users[selectedUser].organizationURI;
                 }
             });
 
@@ -41,7 +50,9 @@
                 // Verzamelen van gebruikersinformatie
                 const name = document.getElementById('name').value;
                 const organization = document.getElementById('organization').value;
+                const organizationURI = document.getElementById('organizationURI').value;
                 const role = document.getElementById('role').value;
+                const personURI = document.getElementById('personURI').value;
                 const latitude = 52.3676;  // Dummy-waarde voor locatie (Amsterdam)
                 const longitude = 4.9041;  // Dummy-waarde voor locatie (Amsterdam)
                 const device = navigator.userAgent; // Apparaatinformatie
@@ -52,19 +63,22 @@
                 const documentType = document.getElementById('documentType').value;
 
                 // Linked Data (RDF in JSON-LD formaat) + Service Request
-                const requestData =  {
+                const requestData = {
                     "@context": {
                         "foaf": "http://xmlns.com/foaf/0.1/",
                         "geo": "http://www.w3.org/2003/01/geo/wgs84_pos#",
                         "xsd": "http://www.w3.org/2001/XMLSchema#"
                     },
+                    "@id": personURI,
                     "@type": "foaf:Person",
                     "foaf:name": name,
                     "foaf:member": {
+                        "@id": organizationURI,
                         "@type": "foaf:Organization",
                         "foaf:name": organization
                     },
                     "foaf:based_near": {
+                        "@id": `http://www.abb.be/lpdc/context/locations/${name.replace(/\s+/g, '')}-location`,
                         "@type": "geo:Point",
                         "geo:lat": latitude,
                         "geo:long": longitude
@@ -74,6 +88,7 @@
                     "foaf:language": language,
                     "foaf:timezone": timezone,
                     "serviceRequest": {
+                        "@id": `http://www.abb.be/lpdc/context/requests/${documentType}-${name.replace(/\s+/g, '')}`,
                         "@type": "foaf:Document",
                         "foaf:title": documentType // Specifieke request die naar de API gaat
                     }
@@ -129,6 +144,9 @@
 
     <label for="organization">Organisatie:</label>
     <input type="text" id="organization" name="organization" required><br><br>
+
+    <input type="hidden" id="organizationURI" name="organizationURI">
+    <input type="hidden" id="personURI" name="personURI">
 
     <label for="role">Hoedanigheid:</label>
     <select id="role" name="role" required>
